@@ -1,0 +1,8 @@
+import sys
+
+HEIGHT = 15
+WIDTH  =10
+
+piece_positions = []
+board = [[0 for w in range(WIDTH)] for h in range(HEIGHT)]
+def 
