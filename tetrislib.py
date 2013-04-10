@@ -1,21 +1,48 @@
 import sys
 from random import randint
 import copy
-
-HEIGHT = 15
-WIDTH  =10
+import curses 
+HEIGHT = 20
+WIDTH  =16
 MOVES = ["r","l","u","d","q",""]
-PIECES = [[[1,1,1,0],[0,1,0,0]],
-          [[0,0,0,0],[1,1,1,1]],
-          [[1,0,0,0],[1,1,1,0]],
-          [[0,0,0,1],[0,1,1,1]],
-          [[1,1,0,0],[1,1,0,0]],
-          [[0,1,1,0],[1,1,0,0]],
-          [[0,1,0,0],[1,1,1,0]],
-          [[1,1,0,0],[0,1,1,0]]          
-          ]
+               
+PIECES = [
+    #Vertical Line
+    [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+    [[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]],
+    [[0,0,0,0],[0,0,0,0],[1,1,1,1],[0,0,0,0]],
+    [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]], 
+    #L1
+    [[1,0,0],[1,1,1],[0,0,0]], 
+    [[0,1,1],[0,1,0],[0,1,0]],
+    [[0,0,0],[1,1,1],[0,0,1]],
+    [[0,1,0],[0,1,0],[1,1,0]],
+    #L2
+    [[0,0,1],[1,1,1],[0,0,0]], 
+    [[0,1,0],[0,1,0],[0,1,1]],
+    [[0,0,0],[1,1,1],[1,0,0]],
+    [[1,1,0],[0,1,0],[0,1,0]],
+    #BLOCK
+    [[1,1,0],[1,1,0],[1,1,0]], 
+    # RSquiggle
+    [[0,1,1],[1,1,0],[0,0,0]], 
+    [[0,1,0],[0,1,1],[0,0,1]],
+    [[0,0,0],[0,1,1],[1,1,0]],
+    [[1,0,0],[1,1,0],[0,1,0]],
+    #T
+    [[0,1,0],[1,1,1],[0,0,0]], 
+    [[0,1,0],[0,1,1],[0,1,0]],
+    [[0,0,0],[1,1,1],[0,1,0]],
+    [[0,1,0],[1,1,0],[0,1,0]],
+    # LSquiggle
+    [[1,1,0],[0,1,1],[0,0,0]], 
+    [[0,0,1],[0,1,1],[0,1,0]],
+    [[0,0,0],[1,1,0],[0,1,1]],
+    [[0,1,0],[1,1,0],[1,0,0]],
+    ]
 
 board = [[0 for w in range(WIDTH)] for h in range(HEIGHT)]
+ROTDICT={0:1, 1:2, 2:3, 3:1, 4:5, 5:6, 6:7, 7:4, 8:9, 9:10, 10:11, 11:8, 12:12, 13:14, 14:15, 15:16, 16:13, 17:18, 18:19, 19:20, 20:17, 21:22, 22:23, 23:24, 24:21}
     
 def generate_piece_coords(piece):
     piece_coords = []
@@ -45,6 +72,17 @@ def check_horizontal_collision(position, piece, board):
         if board[y][x] == 1:
             return True
     return False
+
+def check_rotate_collision(position, piece, board):
+    for x,y in piece:
+        y = y+position[0]
+        x = x+position[1]
+        if x >= WIDTH or x<0 or y==HEIGHT:
+            return True
+        if board[y][x] == 1:
+            return True
+    return False
+
     
 def update_board(position, coords, board):
     new_board = copy.deepcopy(board)
@@ -52,11 +90,8 @@ def update_board(position, coords, board):
         new_board[y+position[0]][x+position[1]] = 1
     return new_board
 
-def draw_board(screen, position, coords, board,score):
+def draw_board(window, position, coords, board,score):
     n_board = update_board(position, coords, board)
-    screen.clear()
-    screen.border(0)
-    screen_height, screen_width = screen.getmaxyx()
     for i in range(HEIGHT):
         row = "|"
         for j in range(WIDTH):
@@ -64,9 +99,11 @@ def draw_board(screen, position, coords, board,score):
                 row+="0"
             else:
                 row+=" "
-        screen.addstr(i+(screen_height-HEIGHT)/2,(screen_width-WIDTH)/2, row+"|\n")
-    screen.addstr(screen_height-1,2,"Score: "+str(score))
-    screen.refresh()
+        window.addstr(i,0, row+"|\n")
+    window.addstr(HEIGHT+2,2,"Score: "+str(score), curses.color_pair(1))
+    window.clrtobot()
+
+    window.refresh()
 
 def detect_lines(board, score):
     r_board = []
@@ -75,7 +112,10 @@ def detect_lines(board, score):
         while sum(board[i]) == WIDTH:
             i = i+1
             score +=1
-        r_board.append(board[i])
+            if i == HEIGHT:
+                break
+        if i<HEIGHT:
+            r_board.append(board[i])
         i = i+1
     for i in range(len(board)-len(r_board)):
         r_board.insert(0,[0 for j in range(WIDTH)])
