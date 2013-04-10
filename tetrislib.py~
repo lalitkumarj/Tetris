@@ -1,0 +1,69 @@
+import sys
+from random import randint
+import copy
+
+HEIGHT = 15
+WIDTH  =10
+MOVES = ["r","l","u","d","q",""]
+PIECES = [[[1,1,1,0],[0,1,0,0]],
+          [[0,0,0,0],[1,1,1,1]],
+          [[1,0,0,0],[1,1,1,0]],
+          [[0,0,0,1],[0,1,1,1]],
+          [[1,1,0,0],[1,1,0,0]],
+          [[0,1,1,0],[1,1,0,0]],
+          [[0,1,0,0],[1,1,1,0]],
+          [[1,1,0,0],[0,1,1,0]]          
+          ]
+
+board = [[0 for w in range(WIDTH)] for h in range(HEIGHT)]
+    
+def generate_piece_coords(piece):
+    piece_coords = []
+    for i in range(len(piece)):
+        for j in range(len(piece[i])):
+            if piece[i][j] ==1:
+                piece_coords.append((i,j))
+    return piece_coords
+
+def check_collision(position, piece, board):
+    for x,y in piece:
+        y = y+position[0]
+        x = x+position[1]
+        if y == HEIGHT:
+            return True
+        if board[y][x] == 1:
+            return True
+    return False
+    
+def update_board(position, coords, board):
+    new_board = copy.deepcopy(board)
+    for x,y in coords:        
+        new_board[y+position[0]][x+position[1]] = 1
+    return new_board
+
+def draw_board(screen, position, coords, board):
+    n_board = update_board(position, coords, board)
+    for i in range(HEIGHT):
+        row = "|"
+        for j in range(WIDTH):
+            if n_board[i][j]==1:
+                row+="0"
+            else:
+                row+=" "
+        stdscr( row+"|\n")
+    print position, curr_piece_index, curr_piece
+    stdscr.refresh()
+
+def detect_lines(board):
+    r_board = []
+    i = 0
+    while i <HEIGHT:
+        while sum(board[i]) == WIDTH:
+            i = i+1
+        r_board.append(board[i])
+        i = i+1
+    for i in range(len(board)-len(r_board)):
+        r_board.insert(0,[0 for j in range(WIDTH)])
+    return r_board
+
+
